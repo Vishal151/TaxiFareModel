@@ -19,7 +19,8 @@ from sklearn.preprocessing import OneHotEncoder
 warnings.filterwarnings("ignore", category=FutureWarning)
 
 MLFLOW_URI = "https://mlflow.lewagon.co/"
-EXPERIMENT_NAME = "first_experiment"
+myname = "vish"
+EXPERIMENT_NAME = f"TaxifareModel_{myname}"
 
 
 class Trainer(object):
