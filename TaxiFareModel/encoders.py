@@ -1,4 +1,6 @@
 import pandas as pd
+import numpy as np
+from scipy.spatial import minkowski_distance
 from sklearn.base import BaseEstimator, TransformerMixin
 from TaxiFareModel.utils import haversine_vectorized
 import geohash as gh
@@ -31,7 +33,7 @@ class TimeFeaturesEncoder(BaseEstimator, TransformerMixin):
         X_["hour"] = X_.index.hour
         X_["month"] = X_.index.month
         X_["year"] = X_.index.year
-        return X_[['dow', 'hour', 'month', 'year']]
+        return X_[['dow', 'hour', 'month', 'year']].reset_index(drop=True)
 
 
 class AddGeohash(BaseEstimator, TransformerMixin):
@@ -58,10 +60,12 @@ class DistanceTransformer(BaseEstimator, TransformerMixin):
     """
 
     def __init__(self,
-                 start_lat="pickup_latitude",
-                 start_lon="pickup_longitude",
-                 end_lat="dropoff_latitude",
-                 end_lon="dropoff_longitude"):
+                 start_lat="start_lat",
+                 start_lon="start_lon",
+                 end_lat="end_lat",
+                 end_lon="end_lon",
+                 distance_type="haversine"):
+        self.distance_type = distance_type
         self.start_lat = start_lat
         self.start_lon = start_lon
         self.end_lat = end_lat
@@ -72,12 +76,8 @@ class DistanceTransformer(BaseEstimator, TransformerMixin):
 
     def transform(self, X, y=None):
         assert isinstance(X, pd.DataFrame)
-        X_ = X.copy()
-        X_["distance"] = haversine_vectorized(
-            X_,
-            start_lat=self.start_lat,
-            start_lon=self.start_lon,
-            end_lat=self.end_lat,
-            end_lon=self.end_lon
-        )
-        return X_[['distance']]
+        if self.distance_type == "haversine":
+            X["distance"] = haversine_vectorized(X, **dist_args)
+        if self.distance_type == "euclidian":
+            X["distance"] = minkowski_distance()
+        return X[["distance"]]

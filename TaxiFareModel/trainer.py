@@ -1,16 +1,26 @@
 # imports
 import time
+import warnings
 
 import category_encoders as ce
+import mlflow
 from TaxiFareModel.data import get_data, clean_data, DIST_ARGS
 from TaxiFareModel.encoders import TimeFeaturesEncoder, DistanceTransformer, AddGeohash
 from TaxiFareModel.utils import compute_rmse, simple_time_tracker
+from memoized_property import memoized_property
+from mlflow.tracking import MlflowClient
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 from sklearn.linear_model import Lasso, Ridge, LinearRegression
 from sklearn.model_selection import train_test_split, RandomizedSearchCV
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import OneHotEncoder
+
+warnings.filterwarnings("ignore", category=FutureWarning)
+
+MLFLOW_URI = "https://mlflow.lewagon.co/"
+EXPERIMENT_NAME = "first_experiment"
+
 
 class Trainer(object):
     ESTIMATOR = "Linear"
@@ -88,6 +98,29 @@ class Trainer(object):
         y_pred = self.pipeline.predict(X_test)
         rmse = compute_rmse(y_pred, y_test)
         return round(rmse, 3)
+
+    ### all methods from last exercise above
+    @memoized_property
+    def mlflow_client(self):
+        mlflow.set_tracking_uri(MLFLOW_URI)
+        return MlflowClient()
+
+    @memoized_property
+    def mlflow_experiment_id(self):
+        try:
+            return self.mlflow_client.create_experiment(self.experiment_name)
+        except BaseException:
+            return self.mlflow_client.get_experiment_by_name(self.experiment_name).experiment_id
+
+    @memoized_property
+    def mlflow_run(self):
+        return self.mlflow_client.create_run(self.mlflow_experiment_id)
+
+    def mlflow_log_param(self, key, value):
+        self.mlflow_client.log_param(self.mlflow_run.info.run_id, key, value)
+
+    def mlflow_log_metric(self, key, value):
+        self.mlflow_client.log_metric(self.mlflow_run.info.run_id, key, value)
 
 
 if __name__ == "__main__":
