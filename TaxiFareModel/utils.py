@@ -1,4 +1,5 @@
 import time
+
 import numpy as np
 
 
@@ -8,21 +9,18 @@ def haversine_vectorized(df,
                          end_lat="dropoff_latitude",
                          end_lon="dropoff_longitude"):
     """
-        Calculate the great circle distance between two points
+        Calculate the great circle distance between two points 
         on the earth (specified in decimal degrees).
         Vectorized version of the haversine distance for pandas df
         Computes distance in kms
     """
 
-    lat_1_rad, lon_1_rad = np.radians(df[start_lat].astype(float)),\
-        np.radians(df[start_lon].astype(float))
-    lat_2_rad, lon_2_rad = np.radians(df[end_lat].astype(float)),\
-        np.radians(df[end_lon].astype(float))
+    lat_1_rad, lon_1_rad = np.radians(df[start_lat].astype(float)), np.radians(df[start_lon].astype(float))
+    lat_2_rad, lon_2_rad = np.radians(df[end_lat].astype(float)), np.radians(df[end_lon].astype(float))
     dlon = lon_2_rad - lon_1_rad
     dlat = lat_2_rad - lat_1_rad
 
-    a = np.sin(dlat / 2.0) ** 2 + np.cos(lat_1_rad) * np.cos(lat_2_rad) *\
-        np.sin(dlon / 2.0) ** 2
+    a = np.sin(dlat / 2.0) ** 2 + np.cos(lat_1_rad) * np.cos(lat_2_rad) * np.sin(dlon / 2.0) ** 2
     c = 2 * np.arcsin(np.sqrt(a))
     return 6371 * c
 
@@ -54,10 +52,9 @@ def simple_time_tracker(method):
         te = time.time()
         if 'log_time' in kw:
             name = kw.get('log_name', method.__name__.upper())
-            kw['log_time'][name] = int(te - ts)
+            kw['log_time'][name] = int((te - ts))
         else:
             print(method.__name__, round(te - ts, 2))
         return result
 
     return timed
-
