@@ -3,16 +3,15 @@ import os
 from google.cloud import storage
 from termcolor import colored
 
-from TaxiFareModel.data import BUCKET_NAME
+from TaxiFareModel.params import BUCKET_NAME, MODEL_NAME, MODEL_VERSION
 
 
-def storage_upload(model_directory, bucket=BUCKET_NAME, rm=False):
+def storage_upload(model_version=MODEL_VERSION, bucket=BUCKET_NAME, rm=False):
     client = storage.Client().bucket(bucket)
 
-    storage_location = '{}/{}/{}/{}'.format(
-        'models',
-        'taxi_fare_model',
-        model_directory,
+    storage_location = 'models/{}/versions/{}/{}'.format(
+        MODEL_NAME,
+        model_version,
         'model.joblib')
     blob = client.blob(storage_location)
     blob.upload_from_filename('model.joblib')

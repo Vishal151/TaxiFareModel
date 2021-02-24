@@ -1,14 +1,18 @@
+from os.path import split
+
 import pandas as pd
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 
-from TaxiFareModel.data import get_data, clean_df, DIST_ARGS
+from TaxiFareModel.data import df_optimized, get_data, clean_df, DIST_ARGS
 from TaxiFareModel.utils import haversine_vectorized, minkowski_distance
 import geohash as gh
+import TaxiFareModel
+
+folder_source, _ = split(TaxiFareModel.__file__)
 
 
 class TimeFeaturesEncoder(BaseEstimator, TransformerMixin):
-    # class TimeFeaturesEncoder(CustomEncoder):
 
     def __init__(self, time_column, time_zone_name='America/New_York'):
         self.time_column = time_column
@@ -64,6 +68,23 @@ class DistanceTransformer(BaseEstimator, TransformerMixin):
         return self
 
 
+class OptimizeSize(BaseEstimator, TransformerMixin):
+
+    def __init__(self, verbose=False):
+        self.verbose = verbose
+
+    def transform(self, X, y=None):
+        X = pd.DataFrame(X.toarray())
+        assert isinstance(X, pd.DataFrame)
+        X = df_optimized(X)
+        if self.verbose:
+            print(X.head())
+        return X
+
+    def fit(self, X, y=None):
+        return self
+
+
 class DistanceToCenter(BaseEstimator, TransformerMixin):
     def __init__(self, verbose=False):
         self.verbose = verbose
@@ -82,7 +103,6 @@ class DistanceToCenter(BaseEstimator, TransformerMixin):
     def fit(self, X, y=None):
         return self
 
-
 class Direction(BaseEstimator, TransformerMixin):
     def __init__(self,
                  start_lat="pickup_latitude",
@@ -97,14 +117,13 @@ class Direction(BaseEstimator, TransformerMixin):
     def transform(self, X, y=None):
         def calculate_direction(d_lon, d_lat):
             result = np.zeros(len(d_lon))
-            l = np.sqrt(d_lon ** 2 + d_lat ** 2)
-            result[d_lon > 0] = (180 / np.pi) * np.arcsin(d_lat[d_lon > 0] / l[d_lon > 0])
-            idx = (d_lon < 0) & (d_lat > 0)
-            result[idx] = 180 - (180 / np.pi) * np.arcsin(d_lat[idx] / l[idx])
-            idx = (d_lon < 0) & (d_lat < 0)
-            result[idx] = -180 - (180 / np.pi) * np.arcsin(d_lat[idx] / l[idx])
+            l = np.sqrt(d_lon**2 + d_lat**2)
+            result[d_lon>0] = (180/np.pi)*np.arcsin(d_lat[d_lon>0]/l[d_lon>0])
+            idx = (d_lon<0) & (d_lat>0)
+            result[idx] = 180 - (180/np.pi)*np.arcsin(d_lat[idx]/l[idx])
+            idx = (d_lon<0) & (d_lat<0)
+            result[idx] = -180 - (180/np.pi)*np.arcsin(d_lat[idx]/l[idx])
             return result
-
         X['delta_lon'] = X[self.start_lon] - X[self.end_lon]
         X['delta_lat'] = X[self.start_lat] - X[self.end_lat]
         X['direction'] = calculate_direction(X.delta_lon, X.delta_lat)
@@ -112,7 +131,6 @@ class Direction(BaseEstimator, TransformerMixin):
 
     def fit(self, X, y=None):
         return self
-
 
 if __name__ == "__main__":
     params = dict(nrows=1000,
@@ -123,5 +141,5 @@ if __name__ == "__main__":
     df = clean_df(df)
     dir = Direction()
     dist_to_center = DistanceToCenter()
-    X = dir.transform(df)
-    X2 = dist_to_center.transform(df)
+    addw = AddWeatherData()
+    X = addw.transform(df)

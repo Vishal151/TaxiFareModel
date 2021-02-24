@@ -6,9 +6,9 @@ from termcolor import colored
 from TaxiFareModel.data import clean_df, get_data
 from TaxiFareModel.trainer import Trainer
 
-default_params = dict(nrows=100000,
+default_params = dict(nrows=40000,
                       upload=False,
-                      local=False,  # set to False to get data from GCP (Storage or BigQuery)
+                      local=True,  # set to False to get data from GCP (Storage or BigQuery)
                       gridsearch=False,
                       optimize=True,
                       estimator="Linear",
@@ -25,7 +25,7 @@ def get_experiment_param(exp='local'):
                                mlflow=True,
                                upload=True,
                                local=False,
-                               estimator="xgboost"))
+                               estimator="RandomForest"))
     else:
         new_params = default_params
     return new_params
