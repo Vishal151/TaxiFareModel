@@ -62,8 +62,13 @@ class Trainer():
         """evaluates the pipeline on df_test and return the RMSE"""
         y_pred = self.pipeline.predict(X_test)
         rmse = compute_rmse(y_pred, y_test)
-        self.mlflow_log_param("rmse", rmse)
+        self.mlflow_log_metric("rmse", rmse)
         return round(rmse, 2)
+    
+    def save_model(self):
+        """ Save the trained model into a model.joblib file """
+        joblib.dump(self.pipeline, 'model.joblib')
+        print(colored("model.joblib saved locally", "green"))
 
     # MLFlow methods
     @memoized_property
@@ -102,8 +107,9 @@ if __name__ == "__main__":
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
     # train
     trainer = Trainer(X_train, y_train)
-    # trainer.set_experiment_name('xp2')
+    trainer.set_experiment_name('[GB] [LON] [VP] LinearV1')
     trainer.run()
     # evaluate
     rmse = trainer.evaluate(X_test, y_test)
     print(f"rmse: {rmse}")
+    trainer.save_model()
